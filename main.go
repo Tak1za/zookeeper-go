@@ -69,6 +69,15 @@ func (client *client) setNodeData(path, data string) error {
 	return nil
 }
 
+func (client *client) checkNodeExists(path string) (bool, error) {
+	exists, _, err := client.zkClient.Exists(path)
+	if err != nil {
+		return exists, err
+	}
+
+	return exists, nil
+}
+
 func main(){
 	client, events, err := connectZK("127.0.0.1:2181")
 	if err != nil {
@@ -116,9 +125,23 @@ func main(){
 	}
 	fmt.Printf("%+v %+v\n", string(rawData), stat)
 
+	//check node exists before deleting
+	exists, err := client.checkNodeExists(getPath(testPath))
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Printf("Node at path: %s exists: %t\n", testPath, exists)
+
 	//delete znode
 	if err := client.deleteNode(getPath(testPath)); err != nil {
 		log.Println(err)
 	}
 	fmt.Printf("znode deleted at path: %s\n", testPath)
+
+	//check node exists after deleting
+	exists, err = client.checkNodeExists(getPath(testPath))
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Printf("Node at path: %s exists: %t\n", testPath, exists)
 }
