@@ -60,6 +60,15 @@ func (client *client) deleteNode(path string) error {
 	return nil
 }
 
+func (client *client) setNodeData(path, data string) error {
+	_, err := client.zkClient.Set(path, []byte(data), -1)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main(){
 	client, events, err := connectZK("127.0.0.1:2181")
 	if err != nil {
@@ -93,6 +102,12 @@ func main(){
 	}
 
 	fmt.Printf("%+v %+v\n", children, stat)
+
+	//set data to a znode
+	if err := client.setNodeData(getPath(testPath), "new-program-test-data-2"); err != nil {
+		log.Println(err)
+	}
+	log.Println("set data completed at path: ", testPath)
 
 	//get znode data
 	rawData, stat, err := client.getNodeData(getPath(testPath))
