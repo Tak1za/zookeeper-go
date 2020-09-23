@@ -43,6 +43,23 @@ func (client *client) createChildren(path string, data string) error{
 	return nil
 }
 
+func (client *client) getNodeData(path string) ([]byte, *zk.Stat, error) {
+	rawData, stat, err := client.zkClient.Get(path)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return rawData, stat, nil
+}
+
+func (client *client) deleteNode(path string) error {
+	if err := client.zkClient.Delete(path, -1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main(){
 	client, events, err := connectZK("127.0.0.1:2181")
 	if err != nil {
@@ -61,10 +78,13 @@ func main(){
 		}
 	}()
 
+	const testPath = "program-test2"
+
 	//create a znode
-	if err = client.createChildren(getPath("program-test"), ""); err != nil {
+	if err := client.createChildren(getPath(testPath), "program-test-data-2"); err != nil {
 		log.Println(err)
 	}
+	log.Printf("znode added at path: %s\n", testPath)
 
 	//get children
 	children, stat, err := client.getChildren("/")
@@ -73,4 +93,17 @@ func main(){
 	}
 
 	fmt.Printf("%+v %+v\n", children, stat)
+
+	//get znode data
+	rawData, stat, err := client.getNodeData(getPath(testPath))
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Printf("%+v %+v\n", string(rawData), stat)
+
+	//delete znode
+	if err := client.deleteNode(getPath(testPath)); err != nil {
+		log.Println(err)
+	}
+	fmt.Printf("znode deleted at path: %s\n", testPath)
 }
