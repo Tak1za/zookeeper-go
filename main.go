@@ -34,6 +34,15 @@ func (client *client) getChildren(path string) ([]string, *zk.Stat, error) {
 	return data, stat, nil
 }
 
+func (client *client) createChildren(path string, data string) error{
+	_, err := client.zkClient.Create(path, []byte(data), 0, zk.WorldACL(zk.PermAll))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main(){
 	client, events, err := connectZK("127.0.0.1:2181")
 	if err != nil {
@@ -52,7 +61,12 @@ func main(){
 		}
 	}()
 
-	//get children at a path
+	//create a znode
+	if err = client.createChildren(getPath("program-test"), ""); err != nil {
+		log.Println(err)
+	}
+
+	//get children
 	children, stat, err := client.getChildren("/")
 	if err != nil {
 		log.Println(err)
